@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<webtop>
+	<section id="admin" mergeType="merge">
+		<subsection id="security">
+			<menu id="auth0ud" sequence="110" label="Auth0 User Directory" permission="SecurityPolicyManagementTab">
+				<menuitem id="status" sequence="10" label="Status" type="a0Login" bodyView="webtopBodyStatus" />
+			</menu>
+		</subsection>
+	</section>
+</webtop>

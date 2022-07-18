@@ -57,7 +57,7 @@ component displayname="Auth0 User Directory" extends="farcry.core.packages.secur
             application.fc.lib.error.logData(application.fc.lib.error.normalizeError(cfcatch));
             stResult.authenticated = "false";
             stResult.userid = "";
-            stResult.message = "Error while logging into Google: #err.message#";
+            stResult.message = "Error while logging into Auth0: #err.message#";
         }
 
 		return stResult;

@@ -186,7 +186,7 @@ component {
         if (structKeyExists(arguments, "phoneNumber")) body["phone_number"] = arguments.phoneNumber;
         if (structKeyExists(arguments, "userMetadata")) body["user_metadata"] = arguments.userMetadata;
         if (structKeyExists(arguments, "emailVerified")) body["email_verified"] = arguments.emailVerified;
-        if (structKeyExists(arguments, "emailVerified")) body["verify_email"] = arguments.verifyEmail;
+        if (structKeyExists(arguments, "verifyEmail")) body["verify_email"] = arguments.verifyEmail;
         if (structKeyExists(arguments, "appMetadata")) body["app_metadata"] = arguments.appMetadata;
 
         var result = makeRequest(
@@ -254,7 +254,7 @@ component {
     }
 
     /* import query with email, user_id, and password_hash; the following fields are also set if present: email,email_verified,given_name,family_name,name,nickname,picture,blocked */
-    public struct function importUsers(required query qUsers, boolean emailVerified=false, boolean sendCompletion=true, waitForCompletion=false) {
+    public struct function createImportUsersArray(required query qUsers) {
         var data = [];
         var item = {};
         for (var row in arguments.qUsers) {
@@ -277,6 +277,13 @@ component {
 
             arrayAppend(data, item);
         }
+
+        return data;
+    }
+
+    /* see createImportUsersArray for expected format of query */
+    public struct function importUsers(required query qUsers, boolean sendCompletion=true, waitForCompletion=false) {
+        var data = createImportUsersArray(arguments.qUsers);
 
         var timestamp = getTickCount();
         var tmpFile = getTempDirectory() & timestamp & ".json";
@@ -369,16 +376,28 @@ component {
         return result;
     }
 
-    public array function getUsers(numeric page=1) {
+    public any function getUsers(numeric page, numeric perPage=100) {
         var token = getAuthToken();
 
-        var result = makeRequest(
-            method = "GET",
-            endpoint = "/api/v2/users",
-            token = token
-        );
-
-        return result;
+        if (structKeyExists(arguments, "page")) {
+            return makeRequest(
+                method = "GET",
+                endpoint = "/api/v2/users",
+                parameters = {
+                    "page" = arguments.page,
+                    "per_page" = arguments.perPage,
+                    "include_totals" = true
+                },
+                token = token
+            );
+        }
+        else {
+            return makeRequest(
+                method = "GET",
+                endpoint = "/api/v2/users",
+                token = token
+            );
+        }
     }
 
     public array function getUsersByEmail(required string email) {
@@ -614,7 +633,7 @@ component {
             arguments.oldGroupID = qGroups.objectid[1];
         }
 
-        if (arguments.oldGroupID neq "" and arguments.oldGroupName neq "-none-") {
+        if (arguments.oldGroupID neq "" and arguments.oldGroupID neq "-none-") {
             return queryExecute("
                 SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when userstatus = 'pending' then 'false' else 'true' end as email_verified
                 FROM        farUser u
@@ -633,6 +652,43 @@ component {
                 ORDER BY    u.objectid ASC
             ", { }, { datasource=application.dsn_read, maxRows=arguments.maxRows });
         }
+    }
+
+	public query function getReverseMigratableUsers(numeric maxRows=-1) {
+        var page = 0;
+        var stUsers = {};
+        var userIDs = "";
+        var qTheseUsers = "";
+        var qAllUsers = queryNew("profileID, userID,  email, given_name, family_name, name, user_id, password_hash, email_verified");
+
+        while (structIsEmpty(stUsers) or stUsers.start + stUsers.length lt stUsers.total) {
+            stUsers = getUsers(page=page);
+
+            for (stUser in stUsers.users) {
+                userIDs = listAppend(userIDs, "#listRest(stUser.user_id, "|")#")
+            }
+
+            qTheseUsers = queryExecute("
+                SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when userstatus = 'pending' then 'false' else 'true' end as email_verified
+                FROM        farUser u
+                            INNER JOIN dmProfile p ON concat(u.userID, '_AUTH0')=p.username
+                WHERE 		u.userID in (:userIDs)
+                ORDER BY    u.objectid ASC
+            ", { userIDs={ list=true, value=userIDs } }, { datasource=application.dsn_read });
+
+            for (stUser in qTheseUsers) {
+                queryAddRow(qAllUsers, stUser);
+
+                if (arguments.maxRows gt -1 and qAllUsers.recordcount eq arguments.maxRows) {
+                    return qAllUsers;
+                }
+            }
+
+            sleep(1000);
+            page += 1;
+        }
+
+        return qAllUsers;
     }
 
     public void function createUserRecords(required query qUsers) {
@@ -654,20 +710,29 @@ component {
         ", { userIDs={ type="cf_sql_varchar", list=true, value=valueList(arguments.qUsers.userID) } }, { datasource=application.dsn });
     }
 
-    public void function switchProfilesToNewUsers(required query qUsers) {
+    public void function enableOldUsers(required query qUsers) {
+
+        queryExecute("
+            UPDATE  farUser
+            SET     userstatus = 'active'
+            WHERE   objectid IN (:userIDs)
+        ", { userIDs={ type="cf_sql_varchar", list=true, value=valueList(arguments.qUsers.userID) } }, { datasource=application.dsn });
+    }
+
+    public void function switchProfilesToNewUsers(required query qUsers, string fromUD="CLIENTUD", string toUD="AUTH0") {
 
         queryExecute("
             UPDATE  dmProfile
             SET     userdirectory = 'AUTH0',
-                    username = REGEXP_REPLACE(username, '_CLIENTUD$', '_AUTH0')
+                    username = REGEXP_REPLACE(username, '_#arguments.fromUD#$', '_#arguments.toUD#')
             WHERE   objectid IN (:profileIDs)
         ", { profileIDs={ type="cf_sql_varchar", list=true, value=valueList(arguments.qUsers.profileID) } }, { datasource=application.dsn });
     }
 
-    public void function switchContentOwnership(required query qUsers) {
+    public void function switchContentOwnership(required query qUsers, string fromUD="CLIENTUD", string toUD="AUTH0") {
         var property = "";
         var typename = "";
-        var usernames = reReplace(valueList(arguments.qUsers.user_id), "($|,)", "_CLIENTUD");
+        var usernames = reReplace(valueList(arguments.qUsers.user_id), "($|,)", "_#arguments.fromUD#");
 
 		// Update user properties
 		for (property in "createdby,lastupdatedby,lockedby") {
@@ -675,7 +740,7 @@ component {
                 if (listfindnocase("type,rule",application.stCOAPI[typename].class) and structkeyexists(application.stCOAPI[typename].stProps, property)) {
                     queryExecute("
                         update	#application.dbowner##typename#
-                        set		#property# = REGEXP_REPLACE(#property#, '_CLIENTUD$', '_AUTH0')
+                        set		#property# = REGEXP_REPLACE(#property#, '_#arguments.fromUD#$', '_#arguments.toUD#')
                         where	#property# IN (:usernames)
                     ", { usernames={ type="cf_sql_varchar", list=true, value=usernames } }, { datasource=application.dsn });
                 }
@@ -703,23 +768,31 @@ component {
 
         // switch profiles across
         updateJobStatusStep(stJob.id, "Switch dmProfile records");
-        switchProfilesToNewUsers(qUsers=arguments.qUsers);
+        switchProfilesToNewUsers(qUsers=arguments.qUsers, fromUD="CLIENTUD", toUD="AUTH0");
 
         // migrate existing data
         updateJobStatusStep(stJob.id, "Update type owner fields");
-        switchContentOwnership(qUsers=arguments.qUsers);
+        switchContentOwnership(qUsers=arguments.qUsers, fromUD="CLIENTUD", toUD="AUTH0");
 
         // disable old users
         updateJobStatusStep(stJob.id, "Disable farUser records");
         disableOldUsers(qUsers=arguments.qUsers);
 
         updateJobStatusStep(stJob.id, "Done");
+    }
 
-        // for reversing the migration you would want to:
-        // 1. get existing users in Auth0, and match against disabled farUser records (`auth0|[farUser.userID]` is in the set)
-        // 2. renable the farUser records
-        // 3. switch content back (_AUTH0 => _CLIENTUD) for those users
-        // 4. switch the profiles back to the older user records (_AUTH0 => _CLIENTUD)
+    public void function reverseMigration(required string oldGroupName, required query qUsers, boolean sendCompletion) {
+        // remove new user records
+        removeUserRecords(qUsers=arguments.qUsers);
+
+        // switch profiles across
+        switchProfilesToNewUsers(qUsers=arguments.qUsers, fromUD="AUTH0", toUD="CLIENTUD");
+
+        // migrate existing data
+        switchContentOwnership(qUsers=arguments.qUsers, fromUD="AUTH0", toUD="CLIENTUD");
+
+        // disable old users
+        enableOldUsers(qUsers=arguments.qUsers);
     }
 
 }

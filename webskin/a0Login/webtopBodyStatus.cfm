@@ -157,7 +157,7 @@
         <input type="hidden" name="id" value="#url.id#">
         <select name="migratable_group">
             <option value="">-- select --</option>
-            <option value="-none-">No group</option>
+            <option value="-none-" <cfif '-none-' eq url.migratable_group>selected</cfif>>No group</option>
             <cfloop array="#aGroups#" item="group"><option <cfif group eq url.migratable_group>selected</cfif>>#group#</option></cfloop>
         </select>
         <button type="submit" class="btn">Find users</button><br>
@@ -220,5 +220,45 @@
     <cfoutput><h2>Import jobs</h2></cfoutput>
     <cfdump var="#aJobs#">
 </cfif>
+
+<cfset qReverseMigratableUsers = application.fc.lib.auth0.getReverseMigratableUsers(maxRows=10) />
+<cfoutput>
+    <h2>Reverse migration</h2>
+    <div class="alert alert-warning">This process converts all profiles linked to an Auth0 user back to the local farUser record.</div>
+    <p>Below are examples of users found in Auth0 and the corresponding farUser record that would be re-enabled.</p>
+</cfoutput>
+<cfoutput>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Given name</th>
+                <th>Family name</th>
+            </tr>
+        </thead>
+        <tbody>
+</cfoutput>
+<cfloop query="#qReverseMigratableUsers#">
+    <cfoutput>
+        <tr>
+            <td>#qReverseMigratableUsers.user_id#</td>
+            <td>#qReverseMigratableUsers.email#</td>
+            <td>#qReverseMigratableUsers.name#</td>
+            <td>#qReverseMigratableUsers.given_name#</td>
+            <td>#qReverseMigratableUsers.family_name#</td>
+        </tr>
+    </cfoutput>
+</cfloop>
+<cfoutput>
+        </tbody>
+    </table>
+</cfoutput>
+<ft:form>
+    <ft:buttonPanel>
+        <ft:button value="Reverse migration" />
+    </ft:buttonPanel>
+</ft:form>
 
 <cfsetting enablecfoutputonly="false">

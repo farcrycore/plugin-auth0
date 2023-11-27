@@ -12,7 +12,7 @@
     <cfset loginURL = application.security.userdirectories.auth0.getAuthorisationURL(
         clientID = application.fapi.getConfig('GUD', 'clientid'),
         redirectURL = application.security.userdirectories.auth0.getRedirectURL(),
-        scope = 'https://daemon.au.auth0.com/userinfo.profile email user id',
+        scope = 'https://buy-nsw.au.auth0.com/userinfo.profile email user id',
         state = ''
     ) />
     <cflocation url="#loginURL#" addtoken="false">

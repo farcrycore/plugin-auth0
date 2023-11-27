@@ -1,8 +1,8 @@
 component {
 
     public any function init() {
-        this.redirect_uri = "http://127.0.0.1:54591";
-		this.audience = "https://daemon.au.auth0.com/api/v2/";
+        this.redirect_uri = "https://uat-feature.suppliers.buy.nsw.gov.au/";
+		this.audience = "https://buy-nsw.au.auth0.com/api/v2/";
 		this.scope = "read:users read:users_app_metadata update:users update:users_app_metadata delete:users create:users create:users_app_metadata read:roles create:role_members read:role_members delete:role_members";
 		this.state = "";
 		this.persist_id_token = true;

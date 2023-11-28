@@ -1,8 +1,6 @@
 component {
 
     public any function init() {
-        this.redirect_uri = "https://uat-feature.suppliers.buy.nsw.gov.au/";
-		this.audience = "https://buy-nsw.au.auth0.com/api/v2/";
 		this.scope = "read:users read:users_app_metadata update:users update:users_app_metadata delete:users create:users create:users_app_metadata read:roles create:role_members read:role_members delete:role_members";
 		this.state = "";
 		this.persist_id_token = true;
@@ -20,7 +18,7 @@ component {
         var clientID = application.fapi.getConfig("auth0", "clientID");
 
         var loginURL = "https://#domain#/authorize"
-            & "?audience=#this.audience#"
+            & "?audience=https://#domain#/api/v2/"
             & "&scope=openid%20user_id%20profile%20offline_access"
             & "&response_type=code"
             & "&client_id=#clientID#"
@@ -40,7 +38,7 @@ component {
         var scope = "openid profile";
 
         var logoutURL = "https://#domain#/v2/logout"
-            & "?audience=#this.audience#"
+            & "?audience=https://#domain#/api/v2/"
             & "&scope=#encodeForURL(scope)#"
             & "&client_id=#clientID#"
             & "&returnTo=#encodeForURL(returnTo)#";
@@ -141,6 +139,7 @@ component {
             structDelete(request, "auth0Token");
         }
         if (not structKeyExists(request, "auth0Token")) {
+            var domain = application.fapi.getConfig("auth0", "domain");
             var clientID = application.fapi.getConfig("auth0", "clientID");
             var clientSecret = application.fapi.getConfig("auth0", "clientSecret");
             var stResult = makeRequest(
@@ -150,7 +149,7 @@ component {
                     "grant_type" = "client_credentials",
                     "client_id" = clientID,
                     "client_secret" = clientSecret,
-                    "audience" = this.audience
+                    "audience" = "https://" & domain & "/api/v2/"
                 }
             );
 

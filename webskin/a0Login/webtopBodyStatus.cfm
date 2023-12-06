@@ -175,9 +175,7 @@
         <cfcase value="all"><cfset qMigratableUsers = application.fc.lib.auth0.getMigratableUsers(oldGroupID=url.migratable_group, maxrows=-1) /></cfcase>
     </cfswitch>
 
-    <cfthread>
-        <cfset application.fc.lib.auth0.runMigration(oldGroupName=url.migratable_group, qUsers=qMigratableUsers, emailVerified=true) />
-    </cfthread>
+    <cfset application.fc.lib.auth0.runMigration(oldGroupName=url.migratable_group, qUsers=qMigratableUsers, emailVerified=true) />
 
     <cflocation url="#application.fapi.fixURL(removeValues='migrate', anchor='migrateusers')#" addtoken="false">
 </cfif>

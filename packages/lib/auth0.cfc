@@ -253,7 +253,7 @@ component {
     }
 
     /* import query with email, user_id, and password_hash; the following fields are also set if present: email,email_verified,given_name,family_name,name,nickname,picture,blocked */
-    public struct function createImportUsersArray(required query qUsers) {
+    public array function createImportUsersArray(required query qUsers) {
         var data = [];
         var item = {};
         for (var row in arguments.qUsers) {
@@ -270,7 +270,7 @@ component {
 
             for (var col in arguments.qUsers.columnList) {
                 if (listFindNoCase("email,email_verified,given_name,family_name,name,nickname,picture,blocked", col)) {
-                    item[col] = row[name];
+                    item[col] = row[col];
                 }
             }
 

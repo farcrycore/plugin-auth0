@@ -314,7 +314,7 @@ component {
         if (arguments.waitForCompletion) {
             cfsetting(requestTimeout=10000);
             while (stResult.status eq "pending") {
-                sleep(30000);
+                sleep(10000);
                 stResult = getJobStatus(stResult.id);
             }
         }

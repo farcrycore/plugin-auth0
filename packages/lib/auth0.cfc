@@ -300,7 +300,7 @@ component {
                 "connection_id" = stConnection.id,
                 "upsert" = true,
                 "external_id" = timestamp,
-                "send_completion" = arguments.sendCompletion
+                "send_completion_email" = false
             },
             token = token
         )
@@ -754,7 +754,7 @@ component {
         if (arguments.oldGroupName eq "" or arguments.oldGroupName eq "-none-") {
             // create group in auth0 if necessary
             updateJobStatusStep(stJob.id, "Create Auth0 group");
-            var auth0Group = createGroupIfMissing(name=arguments.oldGroupName, description="Migrated from #application.fapi.getContentType('farGroup').getID(arguments.oldGroupName)#");
+            var auth0Group = createGroupIfMissing(name=arguments.oldGroupName, description="Migrated from #arguments.oldGroupName#");
 
             // add users to auth0 group
             updateJobStatusStep(stJob.id, "Add users to Auth0 group");

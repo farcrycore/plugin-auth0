@@ -164,7 +164,7 @@
         <cfif len(url.migratable_group)>
             <button type="submit" class="btn" name="migrate" value="one">Migrate one user</button>
             <button type="submit" class="btn" name="migrate" value="ten">Migrate ten users</button>
-            <button type="submit" class="btn" name="migrate" value="all">Migrate all users</button>
+            <button type="submit" class="btn" name="migrate" value="all">Migrate users logged in the last 12 months</button>
         </cfif>
     </form>
 </cfoutput>

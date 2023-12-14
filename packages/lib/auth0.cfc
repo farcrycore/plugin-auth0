@@ -175,8 +175,12 @@ component {
     public struct function createUser(required string email, required string password, string username, string phoneNumber, boolean emailVerified, boolean verifyEmail, struct userMetadata={}, struct appMetadata={}) {
         var token = getAuthToken();
         var connection = application.fapi.getConfig("auth0", "connection");
+        var connectionName= makeRequest(
+            method="GET",
+            endpoint="/api/v2/connections/"&connection
+        );
         var body = {
-            "connection" = connection,
+            "connection" = connectionName.name,
             "email" = arguments.email,
             "password" = arguments.password,
         };
@@ -638,7 +642,8 @@ component {
                 FROM        farUser u
                             INNER JOIN dmProfile p ON concat(u.userID, '_CLIENTUD')=p.username
                             INNER JOIN farUser_aGroups ug ON u.objectid=ug.parentid AND ug.data=:groupID
-                WHERE 		u.userstatus IN ('active','pending')
+                WHERE 		u.userstatus IN ('active','pending') AND
+                            p.lastLogin >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
                 ORDER BY    u.objectid ASC
             ", { groupID=arguments.oldGroupID }, { datasource=application.dsn_read, maxRows=arguments.maxRows });
         }
@@ -647,7 +652,8 @@ component {
                 SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when userstatus = 'pending' then 'false' else 'true' end as email_verified
                 FROM        farUser u
                             INNER JOIN dmProfile p ON concat(u.userID, '_CLIENTUD')=p.username
-                WHERE 		u.userstatus IN ('active','pending')
+                WHERE 		u.userstatus IN ('active','pending') AND
+                            p.lastLogin >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
                 ORDER BY    u.objectid ASC
             ", { }, { datasource=application.dsn_read, maxRows=arguments.maxRows });
         }
@@ -748,26 +754,45 @@ component {
     }
 
     public void function runMigration(required string oldGroupName, required query qUsers, boolean sendCompletion) {
-        // import users
-        var stJob = importUsers(qUsers=arguments.qUsers, sendCompletion=arguments.sendCompletion, waitForCompletion=true);
-
-        if (arguments.oldGroupName eq "" or arguments.oldGroupName eq "-none-") {
-            // create group in auth0 if necessary
-            updateJobStatusStep(stJob.id, "Create Auth0 group");
-            var auth0Group = createGroupIfMissing(name=arguments.oldGroupName, description="Migrated from #arguments.oldGroupName#");
-
-            // add users to auth0 group
-            updateJobStatusStep(stJob.id, "Add users to Auth0 group");
-            addUsersToGroup(auth0Group.id, listToArray(reReplace(valueList(arguments.qUsers.user_id), "(^|,)", "\1auth0|")));
+        var safeBatchSize = 300; 
+        if (qUsers.recordCount <= 20) {
+            processBatch(arguments.qUsers, arguments.oldGroupName, arguments.sendCompletion); 
+        } else {
+            var totalRows = qUsers.recordCount;
+            var currentIndex = 1;
+    
+            while (currentIndex <= totalRows) {
+                var endIndex = min(currentIndex + safeBatchSize - 1, totalRows);
+                var batchQuery = createBatchQuery(qUsers, currentIndex, endIndex);
+                processBatch(batchQuery, arguments.oldGroupName, arguments.sendCompletion);
+                currentIndex += safeBatchSize;
+            }
         }
+    }
+    
+    private query function createBatchQuery(required query qUsers, required numeric startIndex, required numeric endIndex) {
+        var batchQuery = queryNew(qUsers.columnList);
+        for (var i = startIndex; i <= endIndex; i++) {
+            var row = {};
+            for (var col in qUsers.columnList) {
+                row[col] = qUsers[col][i];
+            }
+            queryAddRow(batchQuery, row);
+        }
+        return batchQuery;
+    }
 
+    private void function processBatch(required query batchQuery, required string oldGroupName, boolean sendCompletion) {
+        // import users
+        var stJob = importUsers(qUsers=arguments.batchQuery, sendCompletion=arguments.sendCompletion, waitForCompletion=true);
+    
         // create new user records
         updateJobStatusStep(stJob.id, "Create a0User records");
-        createUserRecords(qUsers=arguments.qUsers);
+        createUserRecords(qUsers=arguments.batchQuery);
 
         // switch profiles across
         updateJobStatusStep(stJob.id, "Switch dmProfile records");
-        switchProfilesToNewUsers(qUsers=arguments.qUsers, fromUD="CLIENTUD", toUD="AUTH0");
+        switchProfilesToNewUsers(qUsers=arguments.batchQuery, fromUD="CLIENTUD", toUD="AUTH0");
 
         // migrate existing data
         updateJobStatusStep(stJob.id, "Update type owner fields");
@@ -775,7 +800,7 @@ component {
 
         // disable old users
         updateJobStatusStep(stJob.id, "Disable farUser records");
-        disableOldUsers(qUsers=arguments.qUsers);
+        disableOldUsers(qUsers=arguments.batchQuery);
 
         updateJobStatusStep(stJob.id, "Done");
     }

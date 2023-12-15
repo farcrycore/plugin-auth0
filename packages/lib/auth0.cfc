@@ -796,7 +796,7 @@ component {
 
         // migrate existing data
         updateJobStatusStep(stJob.id, "Update type owner fields");
-        switchContentOwnership(qUsers=arguments.qUsers, fromUD="CLIENTUD", toUD="AUTH0");
+        switchContentOwnership(qUsers=arguments.batchQuery, fromUD="CLIENTUD", toUD="AUTH0");
 
         // disable old users
         updateJobStatusStep(stJob.id, "Disable farUser records");

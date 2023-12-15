@@ -134,7 +134,7 @@ component displayname="Auth0 User Directory" extends="farcry.core.packages.secur
 
 	public string function getRedirectURL() {
 
-		return "https://#cgi.http_host##application.url.webroot#/index.cfm?type=a0Login&view=displayLogin";
+		return "#application.fc.lib.seo.getCanonicalProtocol()#://#cgi.http_host##application.url.webroot#/index.cfm?type=a0Login&view=displayLogin";
 	}
 
 }

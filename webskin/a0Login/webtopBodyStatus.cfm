@@ -5,7 +5,7 @@
 
 
 <cfset redirectURL = application.security.userdirectories.auth0.getRedirectURL() />
-<cfset homeURL = application.fapi.getLink(alias='home', includeDomain=true) />
+<cfset homeURL = application.fapi.getLink(alias='home', includeDomain=true, bSecure=true) />
 
 <cfif structKeyExists(url, "testlogin") and url.testlogin eq 1>
     <cfset session.testAuth0 = {} />
@@ -174,9 +174,31 @@
         <cfcase value="ten"><cfset qMigratableUsers = application.fc.lib.auth0.getMigratableUsers(oldGroupID=url.migratable_group, maxrows=10) /></cfcase>
         <cfcase value="all"><cfset qMigratableUsers = application.fc.lib.auth0.getMigratableUsers(oldGroupID=url.migratable_group, maxrows=-1) /></cfcase>
     </cfswitch>
+    
+    <!--- Initialize migration tracking structure in session scope if not exists --->
+    <cfif NOT structKeyExists(session, "migrationInProgress")>
+        <cfset session.migrationInProgress = StructNew()>
+    </cfif>
 
-    <cfset application.fc.lib.auth0.runMigration(oldGroupName=url.migratable_group, qUsers=qMigratableUsers, emailVerified=true) />
+    <!--- Check if the migration for this group is already in progress in this session --->
+    <cfif NOT structKeyExists(session.migrationInProgress, url.migratable_group)>
+        <!--- Set the flag to indicate migration is in progress for this session --->
+        <cfset session.migrationInProgress[url.migratable_group] = true>
 
+        <!--- Run the migration --->
+        <cftry>
+            <cfset application.fc.lib.auth0.runMigration(oldGroupName=url.migratable_group, qUsers=qMigratableUsers, emailVerified=true) />
+
+            <!--- Clear the flag after successful migration --->
+            <cfset StructDelete(session.migrationInProgress, url.migratable_group)>
+
+            <cfcatch type="any">
+                <!--- Clear the flag in case of error so it can be retried --->
+                <cfset StructDelete(session.migrationInProgress, url.migratable_group)>
+            </cfcatch>
+        </cftry>
+    </cfif>
+    
     <cflocation url="#application.fapi.fixURL(removeValues='migrate', anchor='migrateusers')#" addtoken="false">
 </cfif>
 <cfif len(url.migratable_group)>

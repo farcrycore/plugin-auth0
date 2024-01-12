@@ -177,7 +177,8 @@ component {
         var connection = application.fapi.getConfig("auth0", "connection");
         var connectionName= makeRequest(
             method="GET",
-            endpoint="/api/v2/connections/"&connection
+            endpoint="/api/v2/connections/"&connection,
+            token = token
         );
         var body = {
             "connection" = connectionName.name,

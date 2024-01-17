@@ -264,6 +264,7 @@ component {
         for (var row in arguments.qUsers) {
             item = {
                 "email" = row.email,
+                "email_verified" = true,
                 "user_id" = row.user_id,
                 "custom_password_hash": {
                     "algorithm": "bcrypt",

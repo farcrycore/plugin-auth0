@@ -1,4 +1,4 @@
-<cfcomponent displayname="Auth0 User" hint="User model for the Auth0." extends="farcry.core.packages.types.types" output="false" description="" bObjectBroker="true">
+<cfcomponent displayname="Auth0 User" hint="User model for the Auth0." extends="farcry.core.packages.types.types" output="false" description="" bObjectBroker="true" ud="AUTH0">
 
 	<cfproperty ftLabel="UserID"
 				name="userid" type="string" default="" hint="The userid to use in FarCry"

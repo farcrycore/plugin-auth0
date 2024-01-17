@@ -371,7 +371,9 @@ component {
 
     public struct function getUser(required string userID) {
         var token = getAuthToken();
-
+        if (!userID.startsWith("auth0|")) {
+            userID = "auth0|" & userID;
+        }
         var result = makeRequest(
             method = "GET",
             endpoint = "/api/v2/users/#arguments.userID#",
@@ -423,7 +425,9 @@ component {
 
     public array function getUserGroups(required string userID) {
         var token = getAuthToken();
-
+        if (!userID.startsWith("auth0|")) {
+            userID = "auth0|" & userID;
+        }
         var result = makeRequest(
             method = "GET",
             endpoint = "/api/v2/users/#arguments.userID#/roles",

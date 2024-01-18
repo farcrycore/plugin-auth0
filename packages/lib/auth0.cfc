@@ -160,6 +160,36 @@ component {
         return request.auth0Token.access_token;
     }
 
+    public string function getPasswordChangeLink(required string email) {
+        var token = getAuthToken();
+        var connection = application.fapi.getConfig("auth0", "connection");
+        var stConnection = getConnection(connection);
+        var body = {
+            "email": arguments.email,
+            "connection_id": stConnection.id
+        };
+    
+        var result = makeRequest(
+            method = "POST",
+            endpoint = "/api/v2/tickets/password-change",
+            body=body,
+            token = token
+        );
+        return result.ticket;
+    }
+
+    public array function getUserByEmail(required string email) {
+        var token = getAuthToken();
+        
+        var result = makeRequest(
+            method = "GET",
+            endpoint = "/api/v2/users-by-email?email=#arguments.email#",
+            token = token
+        );
+
+        return result;
+    }
+
     public struct function getUser(required string userID) {
         var token = getAuthToken();
 

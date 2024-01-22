@@ -275,6 +275,9 @@
         </tbody>
     </table>
 </cfoutput>
+<ft:processForm action="Reverse migration" Exit="true">
+    <cfset application.fc.lib.auth0.reverseMigration(qUsers=qReverseMigratableUsers) />
+</ft:processForm>
 <ft:form>
     <ft:buttonPanel>
         <ft:button value="Reverse migration" />

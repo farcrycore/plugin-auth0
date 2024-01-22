@@ -764,18 +764,23 @@ component {
             WHERE   objectid IN (:userIDs)
         ", { userIDs={ type="cf_sql_varchar", list=true, value=valueList(arguments.qUsers.userID) } }, { datasource=application.dsn });
     }
-
-    public void function switchProfilesToNewUsers(required query qUsers, string fromUD="CLIENTUD", string toUD="AUTH0") {
+    public void function removeUserRecords(required query qUsers) {
+        queryExecute("
+            DELETE FROM a0User
+            WHERE   objectid IN (:userIDs)
+        ", { userIDs={ type="cf_sql_varchar", list=true, value=valueList(arguments.qUsers.userID) } }, { datasource=application.dsn });
+    }
+    public void function switchProfilesToNewUsers(required query qUsers, required string fromUD, required string toUD) {
 
         queryExecute("
             UPDATE  dmProfile
-            SET     userdirectory = 'AUTH0',
+            SET     userdirectory = '#arguments.toUD#',
                     username = REGEXP_REPLACE(username, '_#arguments.fromUD#$', '_#arguments.toUD#')
             WHERE   objectid IN (:profileIDs)
         ", { profileIDs={ type="cf_sql_varchar", list=true, value=valueList(arguments.qUsers.profileID) } }, { datasource=application.dsn });
     }
 
-    public void function switchContentOwnership(required query qUsers, string fromUD="CLIENTUD", string toUD="AUTH0") {
+    public void function switchContentOwnership(required query qUsers, required string fromUD, required string toUD) {
         var property = "";
         var typename = "";
         var usernames = reReplace(valueList(arguments.qUsers.user_id), "($|,)", "_#arguments.fromUD#");
@@ -846,7 +851,7 @@ component {
         updateJobStatusStep(stJob.id, "Done");
     }
 
-    public void function reverseMigration(required string oldGroupName, required query qUsers, boolean sendCompletion) {
+    public void function reverseMigration(required query qUsers) {
         // remove new user records
         removeUserRecords(qUsers=arguments.qUsers);
 
@@ -856,7 +861,7 @@ component {
         // migrate existing data
         switchContentOwnership(qUsers=arguments.qUsers, fromUD="AUTH0", toUD="CLIENTUD");
 
-        // disable old users
+        // enable old users
         enableOldUsers(qUsers=arguments.qUsers);
     }
 

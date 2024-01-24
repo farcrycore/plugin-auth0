@@ -12,6 +12,21 @@ component {
 
         return this;
     }
+    public string function getMfaEnrollURL(string email="", required string redirectURL) {
+        var domain = application.fapi.getConfig("auth0", "domain");
+        var clientID = application.fapi.getConfig("auth0", "clientID");
+
+        var mfaEnrollURL = "https://#domain#/authorize"
+            & "?audience=https://#domain#/api/v2/"
+            & "&scope=openid%20user_id%20profile%20offline_access"
+            & "&response_type=code"
+            & "&client_id=#clientID#"
+            & "&state=#this.state#"
+            & "&redirect_uri=#encodeForURL(arguments.redirectURL)#"
+            & "&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor";
+
+        return mfaEnrollURL;
+    }
 
     public string function getLoginURL(string email="", required string redirectURL) {
         var domain = application.fapi.getConfig("auth0", "domain");

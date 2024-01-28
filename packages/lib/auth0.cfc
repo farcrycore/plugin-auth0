@@ -378,6 +378,53 @@ component {
         return stResult;
     }
 
+    public struct function deleteAuth0Users() {
+        var token = getAuthToken();
+        var result = [];
+        var deleteResult;
+        var userId;
+        var successCount = 0;
+        var errors = [];
+        var continueLoop = true;
+    
+        while (continueLoop) {
+            result = makeRequest(
+                method = "GET",
+                endpoint = "/api/v2/users?fields=user_id",
+                token = token
+            );
+    
+            if (arrayLen(result)) {
+                cfsetting(requestTimeout=10000);
+                for (var user in result) {
+                    try {
+                        userId = user.user_id; 
+                        deleteResult = makeRequest(
+                            method = "DELETE",
+                            endpoint = "/api/v2/users/" & userId,
+                            token = token
+                        );
+                        successCount++;
+                    } catch (any e) {
+                        arrayAppend(errors, e.message);
+                    }
+                }
+            } else {
+                continueLoop = false;
+            }
+        }
+    
+        return {
+            "successCount": successCount,
+            "errors": errors
+        };
+    }
+    
+    
+    
+    
+      
+
     public struct function getJobStatus(required string jobID) {
         var token = getAuthToken();
 
@@ -715,42 +762,42 @@ component {
         }
     }
 
-	public query function getReverseMigratableUsers(numeric maxRows=-1) {
-        var page = 0;
-        var stUsers = {};
-        var userIDs = "";
-        var qTheseUsers = "";
-        var qAllUsers = queryNew("profileID, userID,  email, given_name, family_name, name, user_id, password_hash, email_verified");
-
-        while (structIsEmpty(stUsers) or stUsers.start + stUsers.length lt stUsers.total) {
-            stUsers = getUsers(page=page);
-
-            for (stUser in stUsers.users) {
-                userIDs = listAppend(userIDs, "#listRest(stUser.user_id, "|")#")
+	public query function getReverseMigratableUsers(string userIDs, numeric maxRows=-1) {
+        maxRows = min(maxRows, 5000);
+        var qAllUsers = queryNew("profileID, userID, email, given_name, family_name, name, user_id, password_hash, email_verified");
+    
+         var userCondition;
+            if (userIDs.isEmpty()) {
+                userCondition = "1=1"; // No user ID restriction
+            } else {
+                userCondition = "u.userID LIKE '%#userIDs#%'"; // Filter user IDs using LIKE
             }
-
-            qTheseUsers = queryExecute("
-                SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when userstatus = 'pending' then 'false' else 'true' end as email_verified
+            
+            // Query to fetch users
+            var qTheseUsers = queryExecute("
+                SELECT      p.objectid as profileID, 
+                            u.objectid as userID, 
+                            p.emailAddress as email, 
+                            p.firstName as given_name, 
+                            p.lastName as family_name, 
+                            p.label as name, 
+                            u.userID as user_id, 
+                            u.password as password_hash, 
+                            case when userstatus = 'pending' then 'false' else 'true' end as email_verified
                 FROM        farUser u
-                            INNER JOIN dmProfile p ON concat(u.userID, '_AUTH0')=p.username
-                WHERE 		u.userID in (:userIDs)
+                INNER JOIN  dmProfile p ON concat(u.userID, '_AUTH0') = p.username
+                WHERE       #userCondition#
                 ORDER BY    u.objectid ASC
-            ", { userIDs={ list=true, value=userIDs } }, { datasource=application.dsn_read });
-
+            ",  { }, { datasource=application.dsn_read, maxRows=arguments.maxRows });
+    
+            // Add fetched users to qAllUsers
             for (stUser in qTheseUsers) {
                 queryAddRow(qAllUsers, stUser);
-
-                if (arguments.maxRows gt -1 and qAllUsers.recordcount eq arguments.maxRows) {
-                    return qAllUsers;
-                }
             }
-
-            sleep(1000);
-            page += 1;
-        }
-
+ 
         return qAllUsers;
     }
+    
 
     public void function createUserRecords(required query qUsers) {
 

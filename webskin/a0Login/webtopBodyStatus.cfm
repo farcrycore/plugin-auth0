@@ -241,13 +241,23 @@
     <cfdump var="#aJobs#">
 </cfif>
 
-<cfset qReverseMigratableUsers = application.fc.lib.auth0.getReverseMigratableUsers(maxRows=10) />
+<cfparam name="url.userid" default="">
+<cfif len(url.userid)>
+    <cfset qReverseMigratableUsers = application.fc.lib.auth0.getReverseMigratableUsers(userIDs = url.userid, maxRows=-1) />
+<cfelse>
+<cfset qReverseMigratableUsers = application.fc.lib.auth0.getReverseMigratableUsers(userIDs = "", maxRows=10) />
+</cfif>
 <cfoutput>
     <h2>Reverse migration</h2>
     <div class="alert alert-warning">This process converts all profiles linked to an Auth0 user back to the local farUser record.</div>
     <p>Below are examples of users found in Auth0 and the corresponding farUser record that would be re-enabled.</p>
 </cfoutput>
 <cfoutput>
+    <form action="#application.fapi.fixURL()#" method="GET">
+        <input type="hidden" name="id" value="#url.id#">
+        <input type="text" name="userid" value="#encodeForHTMLAttribute(url.userid)#" placeholder="user@email.com">
+        <button class="btn" type="submit">Search</button>
+    </form>
     <table class="table table-striped">
         <thead>
             <tr>

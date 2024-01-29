@@ -226,6 +226,7 @@ component {
             token = token
         );
         var body = {
+            "user_id" = arguments.email,
             "connection" = connectionName.name,
             "email" = arguments.email,
             "password" = arguments.password,

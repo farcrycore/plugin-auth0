@@ -767,10 +767,10 @@ component {
         var qAllUsers = queryNew("profileID, userID, email, given_name, family_name, name, user_id, password_hash, email_verified");
     
          var userCondition;
-            if (userIDs.isEmpty()) {
+            if (arguments.userIDs.isEmpty()) {
                 userCondition = "1=1"; // No user ID restriction
             } else {
-                userCondition = "u.userID LIKE '%#userIDs#%'"; // Filter user IDs using LIKE
+                userCondition = "u.userID = '#trim(arguments.userIDs)#' "; // Filter user IDs using LIKE
             }
             
             // Query to fetch users

@@ -17,7 +17,7 @@ component {
         var clientID = application.fapi.getConfig("auth0", "clientID");
 
         var mfaEnrollURL = "https://#domain#/authorize"
-            & "?audience=https://#domain#/api/v2/"
+            & "?audience=https://buy-nsw.au.auth0.com/api/v2/"
             & "&scope=openid%20user_id%20profile%20offline_access"
             & "&response_type=code"
             & "&client_id=#clientID#"
@@ -33,7 +33,7 @@ component {
         var clientID = application.fapi.getConfig("auth0", "clientID");
 
         var loginURL = "https://#domain#/authorize"
-            & "?audience=https://#domain#/api/v2/"
+            & "?audience=https://buy-nsw.au.auth0.com/api/v2/"
             & "&scope=openid%20user_id%20profile%20offline_access"
             & "&response_type=code"
             & "&client_id=#clientID#"
@@ -53,7 +53,7 @@ component {
         var scope = "openid profile";
 
         var logoutURL = "https://#domain#/v2/logout"
-            & "?audience=https://#domain#/api/v2/"
+            & "?audience=https://buy-nsw.au.auth0.com/api/v2/"
             & "&scope=#encodeForURL(scope)#"
             & "&client_id=#clientID#"
             & "&returnTo=#encodeForURL(returnTo)#";
@@ -164,7 +164,7 @@ component {
                     "grant_type" = "client_credentials",
                     "client_id" = clientID,
                     "client_secret" = clientSecret,
-                    "audience" = "https://" & domain & "/api/v2/"
+                    "audience" = "https://buy-nsw.au.auth0.com/api/v2/"
                 }
             );
 

@@ -15,9 +15,10 @@ component {
     public string function getMfaEnrollURL(string email="", required string redirectURL) {
         var domain = application.fapi.getConfig("auth0", "domain");
         var clientID = application.fapi.getConfig("auth0", "clientID");
+        var identifier = application.fapi.getConfig("auth0", "identifier");
 
         var mfaEnrollURL = "https://#domain#/authorize"
-            & "?audience=https://buy-nsw.au.auth0.com/api/v2/"
+            & "?audience=#identifier#"
             & "&scope=openid%20user_id%20profile%20offline_access"
             & "&response_type=code"
             & "&client_id=#clientID#"
@@ -31,9 +32,10 @@ component {
     public string function getLoginURL(string email="", required string redirectURL) {
         var domain = application.fapi.getConfig("auth0", "domain");
         var clientID = application.fapi.getConfig("auth0", "clientID");
+        var identifier = application.fapi.getConfig("auth0", "identifier");
 
         var loginURL = "https://#domain#/authorize"
-            & "?audience=https://buy-nsw.au.auth0.com/api/v2/"
+            & "?audience=#identifier#"
             & "&scope=openid%20user_id%20profile%20offline_access"
             & "&response_type=code"
             & "&client_id=#clientID#"
@@ -50,10 +52,11 @@ component {
     public string function getLogoutURL(string returnTo=application.fapi.getLink(alias="home")) {
         var domain = application.fapi.getConfig("auth0", "domain");
         var clientID = application.fapi.getConfig("auth0", "clientID");
+        var identifier = application.fapi.getConfig("auth0", "identifier");
         var scope = "openid profile";
 
         var logoutURL = "https://#domain#/v2/logout"
-            & "?audience=https://buy-nsw.au.auth0.com/api/v2/"
+            & "?audience=#identifier#"
             & "&scope=#encodeForURL(scope)#"
             & "&client_id=#clientID#"
             & "&returnTo=#encodeForURL(returnTo)#";
@@ -157,6 +160,7 @@ component {
             var domain = application.fapi.getConfig("auth0", "domain");
             var clientID = application.fapi.getConfig("auth0", "clientID");
             var clientSecret = application.fapi.getConfig("auth0", "clientSecret");
+            var identifier = application.fapi.getConfig("auth0", "identifier");
             var stResult = makeRequest(
                 method = "POST",
                 endpoint = "/oauth/token",
@@ -164,7 +168,7 @@ component {
                     "grant_type" = "client_credentials",
                     "client_id" = clientID,
                     "client_secret" = clientSecret,
-                    "audience" = "https://buy-nsw.au.auth0.com/api/v2/"
+                    "audience" = identifier
                 }
             );
 
@@ -202,6 +206,19 @@ component {
             token = token
         );
 
+        return result;
+    }
+
+    public array function listMFA(required string email) {
+        var token = getAuthToken();
+        var userId = getUserByEmail(email)[1].user_id;
+        
+        var result = makeRequest(
+            method = "GET",
+            endpoint = "/api/v2/users/#userID#/authentication-methods",
+            token = token
+        );
+ 
         return result;
     }
 

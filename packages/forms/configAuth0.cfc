@@ -3,8 +3,8 @@ component extends="farcry.core.packages.forms.forms" displayname="Auth0 User Dir
 	property name="domain" type="string" required="false"
 		ftSeq="1" ftWizardStep="" ftFieldset="" ftLabel="Domain";
 
-	property name="tenantDomain" type="string" required="false"
-		ftSeq="1" ftWizardStep="" ftFieldset="" ftLabel="Tenant Domain (Audience)";
+	property name="identifier" type="string" required="false"
+		ftSeq="1" ftWizardStep="" ftFieldset="" ftLabel="Identifier (Audience)";
 
 	property name="clientID" type="string" required="false"
 		ftSeq="2" ftWizardStep="" ftFieldset="" ftLabel="Client ID";

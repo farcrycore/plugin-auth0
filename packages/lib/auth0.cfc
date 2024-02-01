@@ -49,7 +49,7 @@ component {
         return loginURL;
     }
 
-    public string function getLogoutURL(string returnTo=application.fapi.getLink(alias="home")) {
+    public string function getLogoutURL(string returnTo=application.fapi.getLink(alias="home", includeDomain=true)) {
         var domain = application.fapi.getConfig("auth0", "domain");
         var clientID = application.fapi.getConfig("auth0", "clientID");
         var identifier = application.fapi.getConfig("auth0", "identifier");

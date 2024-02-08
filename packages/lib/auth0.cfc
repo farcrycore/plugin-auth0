@@ -29,7 +29,7 @@ component {
         return mfaEnrollURL;
     }
 
-    public string function getLoginURL(string email="", required string redirectURL) {
+    public string function getLoginURL(string email="", required string redirectURL, string stateValue) {
         var domain = application.fapi.getConfig("auth0", "domain");
         var clientID = application.fapi.getConfig("auth0", "clientID");
         var identifier = application.fapi.getConfig("auth0", "identifier");
@@ -40,7 +40,7 @@ component {
             & "&response_type=code"
             & "&client_id=#clientID#"
             & "&redirect_uri=#encodeForURL(arguments.redirectURL)#"
-            & "&state=#this.state#";
+            & "&state=#encodeForURL(arguments.stateValue)#";
 
         if (len(arguments.email)) {
             loginURL = loginURL & "&login_hint=#encodeForURL(arguments.email)#";

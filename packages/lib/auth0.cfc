@@ -222,7 +222,18 @@ component {
         return result;
     }
 
-    public any function deleteMFA(required string mfaId, boolean redirectEnrol=true) {
+    public any function deleteMFA(required string mfaId) {
+        var token = getAuthToken();
+        
+        var result = makeRequest(
+            method = "DELETE",
+            endpoint = "/api/v2/guardian/enrollments/#arguments.mfaId#",
+            token = token
+        );
+        return; 
+    }
+
+    public any function changeMFA(required string mfaId, boolean redirectEnrol=true) {
         var token = getAuthToken();
         
         var result = makeRequest(

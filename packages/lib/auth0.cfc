@@ -233,21 +233,6 @@ component {
         return; 
     }
 
-    public any function changeMFA(required string mfaId, boolean redirectEnrol=true) {
-        var token = getAuthToken();
-        
-        var result = makeRequest(
-            method = "DELETE",
-            endpoint = "/api/v2/guardian/enrollments/#arguments.mfaId#",
-            token = token
-        );
-        if(redirectEnrol){
-            var redirectURL = application.fc.lib.auth0.getMfaEnrollURL(redirectURL=application.fapi.getLink(type="a0Login", includeDomain=true, bSecure=true));
-            location(url=redirectURL); 
-        }
-        return; 
-    }
-
     public struct function getUser(required string userID) {
         var token = getAuthToken();
 

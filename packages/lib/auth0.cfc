@@ -209,16 +209,25 @@ component {
         return result;
     }
 
-    public array function listMFA(required string email) {
+    public any function listMFA(required string email) {
         var token = getAuthToken();
-        var userId = getUserByEmail(email)[1].user_id;
-        
-        var result = makeRequest(
-            method = "GET",
-            endpoint = "/api/v2/users/#userID#/authentication-methods",
-            token = token
-        );
- 
+        var auth0user = getUserByEmail(email)
+        var result = {};
+        if (ArrayLen(auth0user) > 0) {
+            var userId = auth0user[1].user_id;
+            try {
+            result = makeRequest(
+                method = "GET",
+                endpoint = "/api/v2/users/#userID#/authentication-methods",
+                token = token
+            );
+            } catch (any e) {
+
+            }
+        }else {
+            // If the user does not exist in Auth0
+            return { "error": true, "message": "noUser" };
+        }
         return result;
     }
 
@@ -435,7 +444,7 @@ component {
                         );
                         successCount++;
                     } catch (any e) {
-                        arrayAppend(errors, e.message);
+                        application.fc.lib.error.logData(application.fc.lib.error.normalizeError(e));
                     }
                 }
             } else {
@@ -775,8 +784,9 @@ component {
                             INNER JOIN dmProfile p ON concat(u.userID, '_CLIENTUD')=p.username
                             INNER JOIN farUser_aGroups ug ON u.objectid=ug.parentid AND ug.data=:groupID
                 WHERE 		u.userstatus IN ('active','pending') AND
-                            p.lastLogin >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-                ORDER BY    u.objectid ASC
+                            p.emailAddress IS NOT NULL AND
+                            p.emailAddress <> ''
+                ORDER BY    p.lastLogin DESC
             ", { groupID=arguments.oldGroupID }, { datasource=application.dsn_read, maxRows=arguments.maxRows });
         }
         else {
@@ -785,8 +795,11 @@ component {
                 FROM        farUser u
                             INNER JOIN dmProfile p ON concat(u.userID, '_CLIENTUD')=p.username
                 WHERE 		u.userstatus IN ('active','pending') AND
-                            p.lastLogin >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-                ORDER BY    u.objectid ASC
+                            (u.lGroups IS NULL OR u.lGroups = '') AND
+                            u.userID <> 'root' AND
+                            p.emailAddress IS NOT NULL AND
+                            p.emailAddress <> ''
+                ORDER BY    p.lastLogin DESC
             ", { }, { datasource=application.dsn_read, maxRows=arguments.maxRows });
         }
     }
@@ -893,15 +906,23 @@ component {
     public void function runMigration(required string oldGroupName, required query qUsers, boolean sendCompletion) {
         var safeBatchSize = 300; 
         if (qUsers.recordCount <= 20) {
+            try {
             processBatch(arguments.qUsers, arguments.oldGroupName, arguments.sendCompletion); 
+            } catch (any e) {
+                application.fc.lib.error.logData(application.fc.lib.error.normalizeError(e));
+            }
         } else {
             var totalRows = qUsers.recordCount;
             var currentIndex = 1;
     
             while (currentIndex <= totalRows) {
+                try {
                 var endIndex = min(currentIndex + safeBatchSize - 1, totalRows);
                 var batchQuery = createBatchQuery(qUsers, currentIndex, endIndex);
                 processBatch(batchQuery, arguments.oldGroupName, arguments.sendCompletion);
+                } catch (any e) {
+                    application.fc.lib.error.logData(application.fc.lib.error.normalizeError(e));
+                }
                 currentIndex += safeBatchSize;
             }
         }

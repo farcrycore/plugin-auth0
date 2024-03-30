@@ -149,6 +149,21 @@
     </table>
 </cfoutput>
 
+<cfoutput>
+    <h2>Delete all users from auth0</h2>
+    <!--- <button type="submit" class="btn">Delete Users</button><br> --->
+</cfoutput>
+<ft:processForm action="Delete Users">
+    <cfset aDeleteAuth0Users=application.fc.lib.auth0.deleteAuth0Users() />
+    <cfdump var="#aDeleteAuth0Users#">
+</ft:processForm>
+<ft:form>
+    <ft:buttonPanel>
+        <ft:button value="Delete Users" />
+    </ft:buttonPanel>
+</ft:form>
+
+
 <cfset aGroups = application.security.userdirectories.clientud.getAllGroups() />
 <cfparam name="url.migratable_group" default="">
 <cfoutput>
@@ -164,7 +179,7 @@
         <cfif len(url.migratable_group)>
             <button type="submit" class="btn" name="migrate" value="one">Migrate one user</button>
             <button type="submit" class="btn" name="migrate" value="ten">Migrate ten users</button>
-            <button type="submit" class="btn" name="migrate" value="all">Migrate users logged in the last 12 months</button>
+            <button type="submit" class="btn" name="migrate" value="all">Migrate all users</button>
         </cfif>
     </form>
 </cfoutput>

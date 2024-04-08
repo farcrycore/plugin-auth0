@@ -443,6 +443,7 @@ component {
                             token = token
                         );
                         successCount++;
+                        sleep(500);
                     } catch (any e) {
                         application.fc.lib.error.logData(application.fc.lib.error.normalizeError(e));
                     }
@@ -805,7 +806,6 @@ component {
     }
 
 	public query function getReverseMigratableUsers(string userIDs, numeric maxRows=-1) {
-        maxRows = min(maxRows, 5000);
         var qAllUsers = queryNew("profileID, userID, email, given_name, family_name, name, user_id, password_hash, email_verified");
     
          var userCondition;
@@ -964,6 +964,30 @@ component {
     }
 
     public void function reverseMigration(required query qUsers) {
+        var safeBatchSize = 5000; 
+        if (qUsers.recordCount <= 5000) {
+            try {
+                processReverseBatch(arguments.qUsers); 
+            } catch (any e) {
+                application.fc.lib.error.logData(application.fc.lib.error.normalizeError(e));
+            }
+        } else {
+            var totalRows = qUsers.recordCount;
+            var currentIndex = 1;
+    
+            while (currentIndex <= totalRows) {
+                try {
+                var endIndex = min(currentIndex + safeBatchSize - 1, totalRows);
+                var batchQuery = createBatchQuery(qUsers, currentIndex, endIndex);
+                processReverseBatch(arguments.qUsers); 
+                } catch (any e) {
+                    application.fc.lib.error.logData(application.fc.lib.error.normalizeError(e));
+                }
+                currentIndex += safeBatchSize;
+            }
+        }
+    }
+    public void function processReverseBatch(required query qUsers) {
         // remove new user records
         removeUserRecords(qUsers=arguments.qUsers);
 

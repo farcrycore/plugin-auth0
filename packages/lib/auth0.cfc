@@ -406,7 +406,7 @@ component {
         arrayAppend(this.importJobs, stResult);
 
         if (arguments.waitForCompletion) {
-            cfsetting(requestTimeout=10000);
+            cfsetting(requestTimeout=50000);
             while (stResult.status eq "pending") {
                 sleep(10000);
                 stResult = getJobStatus(stResult.id);
@@ -433,7 +433,7 @@ component {
             );
     
             if (arrayLen(result)) {
-                cfsetting(requestTimeout=10000);
+                cfsetting(requestTimeout=50000);
                 for (var user in result) {
                     try {
                         userId = user.user_id; 

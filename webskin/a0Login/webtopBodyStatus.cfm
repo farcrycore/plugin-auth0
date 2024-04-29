@@ -301,7 +301,11 @@
     </table>
 </cfoutput>
 <ft:processForm action="Reverse migration" Exit="true">
+<cfif len(url.userid)>
+    <cfset application.fc.lib.auth0.reverseMigration(qUsers=application.fc.lib.auth0.getReverseMigratableUsers(userIDs = url.userid, maxRows=-1)) />
+<cfelse>
     <cfset application.fc.lib.auth0.reverseMigration(qUsers=application.fc.lib.auth0.getReverseMigratableUsers(userIDs = "", maxRows=-1)) />
+</cfif>
 </ft:processForm>
 <ft:form>
     <ft:buttonPanel>

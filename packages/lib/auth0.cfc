@@ -313,13 +313,16 @@ component {
         if (structKeyExists(arguments, "userMetadata")) body["user_metadata"] = arguments.userMetadata;
         if (structKeyExists(arguments, "appMetadata")) body["app_metadata"] = arguments.appMetadata;
         if (structKeyExists(arguments, "username")) body["username"] = arguments.username;
-
-        var result = makeRequest(
-            method = "PATCH",
-            endpoint = "/api/v2/users/#arguments.userID#",
-            body = body,
-            token = token
-        );
+        try {
+            var result = makeRequest(
+                method = "PATCH",
+                endpoint = "/api/v2/users/#arguments.userID#",
+                body = body,
+                token = token
+            );
+        } catch (any e) {
+            return deserializeJSON(e.Detail);
+        }
 
         return result;
     }

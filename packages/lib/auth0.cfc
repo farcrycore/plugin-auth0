@@ -783,7 +783,7 @@ component {
 
         if (arguments.oldGroupID neq "" and arguments.oldGroupID neq "-none-") {
             return queryExecute("
-                SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when userstatus = 'pending' then 'false' else 'true' end as email_verified
+                SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when u.userstatus = 'pending' then 'false' else 'true' end as email_verified
                 FROM        farUser u
                             INNER JOIN dmProfile p ON concat(u.userID, '_CLIENTUD')=p.username
                             INNER JOIN farUser_aGroups ug ON u.objectid=ug.parentid AND ug.data=:groupID
@@ -795,7 +795,7 @@ component {
         }
         else {
             return queryExecute("
-                SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when userstatus = 'pending' then 'false' else 'true' end as email_verified
+                SELECT      p.objectid as profileID, u.objectid as userID, p.emailAddress as email, p.firstName as given_name, p.lastName as family_name, p.label as name, u.userID as user_id, u.password as password_hash, case when u.userstatus = 'pending' then 'false' else 'true' end as email_verified
                 FROM        farUser u
                             INNER JOIN dmProfile p ON concat(u.userID, '_CLIENTUD')=p.username
                 WHERE 		u.userstatus IN ('active','pending') AND
@@ -828,7 +828,7 @@ component {
                             p.label as name, 
                             u.userID as user_id, 
                             u.password as password_hash, 
-                            case when userstatus = 'pending' then 'false' else 'true' end as email_verified
+                            case when u.userstatus = 'pending' then 'false' else 'true' end as email_verified
                 FROM        farUser u
                 INNER JOIN  dmProfile p ON concat(u.userID, '_AUTH0') = p.username
                 WHERE       #userCondition#

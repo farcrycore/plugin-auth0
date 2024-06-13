@@ -254,7 +254,7 @@ component {
         return result;
     }
 
-    public struct function createUser(required string email, required string password, string username, string phoneNumber, boolean emailVerified, boolean verifyEmail, struct userMetadata={}, struct appMetadata={}) {
+    public struct function createUser(required string email, required string password, required string objectid, string username, string phoneNumber, boolean emailVerified, boolean verifyEmail, struct userMetadata={}, struct appMetadata={}) {
         var token = getAuthToken();
         var connection = application.fapi.getConfig("auth0", "connection");
         var connectionName= makeRequest(
@@ -263,7 +263,7 @@ component {
             token = token
         );
         var body = {
-            "user_id" = arguments.email,
+            "user_id" = Replace(arguments.objectid, "-", "", "all"),
             "connection" = connectionName.name,
             "email" = arguments.email,
             "password" = arguments.password,

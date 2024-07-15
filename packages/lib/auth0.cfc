@@ -211,7 +211,7 @@ component {
 
     public any function listMFA(required string email) {
         var token = getAuthToken();
-        var auth0user = getUserByEmail(email)
+        var auth0user = getUserByEmail(arguments.email)
         var result = {};
         if (ArrayLen(auth0user) > 0) {
             var userId = auth0user[1].user_id;
@@ -565,8 +565,8 @@ component {
 
     public array function getUserGroups(required string userID) {
         var token = getAuthToken();
-        if (!userID.startsWith("auth0|")) {
-            userID = "auth0|" & userID;
+        if (!arguments.userID.startsWith("auth0|")) {
+            arguments.userID = "auth0|" & arguments.userID;
         }
         var result = makeRequest(
             method = "GET",

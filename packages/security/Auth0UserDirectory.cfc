@@ -7,6 +7,7 @@ component displayname="Auth0 User Directory" extends="farcry.core.packages.secur
 
 	public struct function authenticate() {
 		var oUser = application.fapi.getContentType("a0User");
+        var stResult = {};
 
 		if (structkeyexists(url,"error")) {
 

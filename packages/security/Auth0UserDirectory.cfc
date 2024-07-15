@@ -54,7 +54,7 @@ component displayname="Auth0 User Directory" extends="farcry.core.packages.secur
             }
 
             stResult.authenticated = "true";
-        } catch (err) {dump(err);abort;
+        } catch (err) {
             application.fc.lib.error.logData(application.fc.lib.error.normalizeError(cfcatch));
             stResult.authenticated = "false";
             stResult.userid = "";

@@ -287,7 +287,7 @@ component {
         return result;
     }
 
-    public struct function updateUser(required string userID, boolean blocked, boolean emailVerified, string email, boolean verifyEmail, string phoneNumber, boolean phoneVerified, boolean verifyPhoneNumber, string password, string verifyPassword, struct userMetadata, struct appMetadata, string username) {
+    public struct function updateUser(required string userID, boolean blocked, boolean emailVerified, string email, boolean verifyEmail, string phoneNumber, boolean phoneVerified, boolean verifyPhoneNumber, string password, string verifyPassword, struct userMetadata, struct appMetadata, string name) {
         var token = getAuthToken();
         var clientID = application.fapi.getConfig("auth0", "clientID");
         var connection = application.fapi.getConfig("auth0", "connection");
@@ -313,7 +313,7 @@ component {
         if (structKeyExists(arguments, "verifyPassword")) body["verify_password"] = arguments.verifyPassword;
         if (structKeyExists(arguments, "userMetadata")) body["user_metadata"] = arguments.userMetadata;
         if (structKeyExists(arguments, "appMetadata")) body["app_metadata"] = arguments.appMetadata;
-        if (structKeyExists(arguments, "username")) body["username"] = arguments.username;
+        if (structKeyExists(arguments, "name")) body["name"] = arguments.name;
         try {
             var result = makeRequest(
                 method = "PATCH",

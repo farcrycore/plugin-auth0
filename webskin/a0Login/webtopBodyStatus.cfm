@@ -159,7 +159,20 @@
 </ft:processForm>
 <ft:form>
     <ft:buttonPanel>
-        <ft:button value="Delete Users" />
+        <ft:button value="Delete Users"  onclick="if (!confirm('Are you sure you want to delete all accounts on auth0?')) return false;"/>
+    </ft:buttonPanel>
+</ft:form>
+
+<cfoutput>
+    <h2>Delete Bad Auth0 Accounts</h2>
+</cfoutput>
+<ft:processForm action="Delete Bad Accounts">
+    <cfset aDeleteBadAuth0Users=application.fc.lib.auth0.deleteBadAuth0Users() />
+    <cfdump var="#aDeleteBadAuth0Users#">
+</ft:processForm>
+<ft:form>
+    <ft:buttonPanel>
+        <ft:button value="Delete Bad Accounts" onclick="if (!confirm('Are you sure you want to delete bad accounts on auth0?')) return false;"/>
     </ft:buttonPanel>
 </ft:form>
 

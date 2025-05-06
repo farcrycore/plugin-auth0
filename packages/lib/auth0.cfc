@@ -464,7 +464,52 @@ component {
     }
     
     
+    public struct function deleteBadAuth0Users() {
+        var token = getAuthToken();
+        var qBadAuth0Users = [];
+        var deleteResult;
+        var userId;
+        var successCount = 0;
+        var errors = [];
     
+        var qBadAuth0Users = queryExecute("
+            SELECT u.userid, p.emailAddress
+            FROM dmProfile_backup p 
+            INNER JOIN bad_profiles b ON p.objectid = b.objectid
+            INNER JOIN a0user u ON p.emailAddress = u.email
+            WHERE NOT EXISTS (
+                SELECT 1 FROM dmProfile d
+                WHERE d.emailAddress = p.emailAddress
+            );
+        ",  { }, { datasource=application.dsn });
+
+        if (qBadAuth0Users.recordCount > 0) {
+            cfsetting(requestTimeout=50000);
+            for (var user in qBadAuth0Users) {
+                try {
+                    userId = user.userid; 
+                    deleteResult = makeRequest(
+                        method = "DELETE",
+                        endpoint = "/api/v2/users/" & userId,
+                        token = token
+                    );
+                    queryExecute("
+                        DELETE FROM a0User
+                        WHERE   userid = :userID
+                    ", { userID={ type="cf_sql_varchar", value=userId } }, { datasource=application.dsn });
+                    successCount++;
+                    sleep(500);
+                } catch (any e) {
+                    application.fc.lib.error.logData(application.fc.lib.error.normalizeError(e));
+                }
+            }
+        } 
+    
+        return {
+            "successCount": successCount,
+            "errors": errors
+        };
+    }
     
       
 

@@ -149,9 +149,8 @@
     </table>
 </cfoutput>
 
-<cfoutput>
+<!--- <cfoutput>
     <h2>Delete all users from auth0</h2>
-    <!--- <button type="submit" class="btn">Delete Users</button><br> --->
 </cfoutput>
 <ft:processForm action="Delete Users">
     <cfset aDeleteAuth0Users=application.fc.lib.auth0.deleteAuth0Users() />
@@ -161,7 +160,7 @@
     <ft:buttonPanel>
         <ft:button value="Delete Users"  onclick="if (!confirm('Are you sure you want to delete all accounts on auth0?')) return false;"/>
     </ft:buttonPanel>
-</ft:form>
+</ft:form> --->
 
 <cfoutput>
     <h2>Delete Bad Auth0 Accounts</h2>

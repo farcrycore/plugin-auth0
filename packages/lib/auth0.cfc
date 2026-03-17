@@ -749,7 +749,7 @@ component {
             var accessToken = getAccessToken();
             var stResult = {};
 
-            cfhttp(method="PATCH", url="https://" & variables.instance.domain & "/api/v2/users/" & encodeForUrl(arguments.userID), result="stResult") {
+            cfhttp(method="PATCH", url="https://" & variables.instance.domain & "/api/v2/users/" & encodeForUrl(arguments.userID), result="stResult", timeout=10) {
                     cfhttpparam(type="header", name="Authorization", value="Bearer #accessToken#");
                     cfhttpparam(type="header", name="Content-Type", value="application/json");
                     cfhttpparam(type="body", value='{"user_metadata": {"firstname": "#arguments.first_name#", "lastname": "#arguments.last_name#"}}');
@@ -775,7 +775,7 @@ component {
 
         var stResponse = {};
 
-        cfhttp(method=arguments.method, url=httpUrl, result="stResponse") {
+        cfhttp(method=arguments.method, url=httpUrl, result="stResponse", timeout=30) {
             if (structKeyExists(arguments, "body")) {
                 cfhttpparam(type="header", name="Content-Type", value="application/json");
                 cfhttpparam(type="body", value=serializeJSON(arguments.body));

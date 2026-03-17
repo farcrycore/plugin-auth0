@@ -52,12 +52,12 @@ START WEBSKIN
 			<cfoutput><p class="error">You are logged out. <a href="/index.cfm?type=gudLogin&view=displayLogin">Login again</a></p></cfoutput>
 		<cfelseif isdefined("url.code") and isdefined("session.testAuth0")>
 			<cflocation url="/webtop/index.cfm?id=admin.security.auth0ud.status&testlogin=2&code=#url.code#" />
-		<cfelseif isdefined("url.code") and not isdefined("arguments.stParam.message")>
-			<cfset arguments.stParam = application.security.processLogin() />
-			<cfif arguments.stParam.authenticated and not request.mode.profile>
-				<cflocation url="#URLDecode(arguments.stParam.loginReturnURL)#" addtoken="false" />
+		<cfelseif isdefined("url.code") and not isdefined("stParam.message")>
+			<cfset stParam = application.security.processLogin() />
+			<cfif stParam.authenticated and not request.mode.profile>
+				<cflocation url="#URLDecode(stParam.loginReturnURL)#" addtoken="false" />
 			<cfelse>
-				<cfoutput><p class="error">#arguments.stParam.message# <a href="/index.cfm?type=gudLogin&view=displayLogin">Retry</a></p></cfoutput>
+				<cfoutput><p class="error">#stParam.message# <a href="/index.cfm?type=gudLogin&view=displayLogin">Retry</a></p></cfoutput>
 			</cfif>
 		<cfelse>
 			<cflocation url="#application.security.userdirectories.auth0.getAuthorisationURL(clientID=application.fapi.getConfig('GUD', 'clientid'),redirectURL=application.security.userdirectories.auth0.getRedirectURL())#" addtoken="false" />

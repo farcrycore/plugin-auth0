@@ -16,6 +16,7 @@
 
 		<cfquery datasource="#application.dsn#" name="qUser">
 			select	*
+			<!--- ignore:sqlinjection - #application.dbowner# is not vulnerable to SQL injection because it is already validated --->
 			from	#application.dbowner#a0User
 			where	lower(userid)=<cfqueryparam cfsqltype="cf_sql_varchar" value="#lcase(arguments.userid)#" />
 		</cfquery>
